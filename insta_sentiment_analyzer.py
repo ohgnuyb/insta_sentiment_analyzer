@@ -4,16 +4,74 @@ from selenium.webdriver.edge.options import Options
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from transformers import LongformerTokenizer, LongformerForSequenceClassification, Trainer, TrainingArguments
-from datasets import load_dataset
-import torch
 import time
 import re
 from bs4 import BeautifulSoup
-import torch
+from transformers import pipeline
+from transformers import DistilBertTokenizer, DistilBertForSequenceClassification
+
+
+
+tokenizer = DistilBertTokenizer.from_pretrained("distilbert-base-uncased-finetuned-sst-2-english")
+model = DistilBertForSequenceClassification.from_pretrained("distilbert-base-uncased-finetuned-sst-2-english")
+
+# 감정 분석 파이프라인 설정
+classifier = pipeline("sentiment-analysis", model=model, tokenizer=tokenizer)
+
+def analyze_sentiment(text):
+    # 텍스트에 대한 감정 분석
+    result = classifier(text)[0]
+    
+    sentiment = result['label']
+    if sentiment == 'POSITIVE':
+        return 'POSITIVE'
+    elif sentiment == 'NEGATIVE':
+        return 'NEGATIVE'
+    else:
+        return 'NEUTRAL'
+
+
+    
+def print_results(results):
+    print("-----------------------------------------------")
+
+    print(f" - 해시태그 게시물 분석:")
+    
+    sentiment_counts = {'POSITIVE': 0, 'NEGATIVE': 0, 'NEUTRAL': 0}
+    seen_posts = set()
+
+    for idx, result in enumerate(results, 1):
+        content, date, tags = result
+
+        post_key = (content, date, tuple(tags))
+        if post_key in seen_posts:
+            continue
+        seen_posts.add(post_key)
+
+        sentiment = analyze_sentiment(content)
+
+        print(f"게시물 {idx}:")
+        print(f"내용: {content}")
+        print(f"날짜: {date}")
+        print(f"해시태그: {tags}")
+        print(f"내용 여론 분석: {sentiment}\n")
+
+        sentiment_counts[sentiment] += 1
+
+    total_posts = len(seen_posts)
+    if total_posts > 0:
+        positive_ratio = sentiment_counts['POSITIVE'] / total_posts * 100
+        negative_ratio = sentiment_counts['NEGATIVE'] / total_posts * 100
+        neutral_ratio = sentiment_counts['NEUTRAL'] / total_posts * 100
+        print(f"기능1: 전체 게시물에 대한 여론 분석 결과:")
+        print(f"긍정적 비율: {positive_ratio:.2f}%")
+        print(f"부정적 비율: {negative_ratio:.2f}%")
+        print(f"중립적 비율: {neutral_ratio:.2f}%")
+    else:
+        print("수집된 게시물이 없습니다.")
 
 # Edge driver path setup
-edge_driver_path = "./msedgedriver.exe" 
+edge_driver_path = "./msedgedriver.exe"
 edge_options = Options()
 edge_options.add_experimental_option("detach", True)
 edge_options.add_experimental_option("excludeSwitches", ["enable-logging"])
@@ -22,7 +80,6 @@ service = Service(executable_path=edge_driver_path)
 driver = webdriver.Edge(service=service, options=edge_options)
 
 def insta_login(driver, username, password):
-    """인스타그램 로그인 함수"""
     driver.get('https://instagram.com')
     WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.NAME, 'username')))
 
@@ -39,12 +96,11 @@ def insta_login(driver, username, password):
         print(f"로그인 오류: {e}")
 
 def go_to_home(driver):
-    """인스타그램 홈페이지로 이동하는 함수"""
     try:
         WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.CSS_SELECTOR, 'svg[aria-label="홈"]')))
         print("로그인 상태 확인 완료.")
     except Exception as e:
-        print(f"홈 페이지로 이동 중 오류 발생: {e}") 
+        print(f"홈 페이지로 이동 중 오류 발생: {e}")
 
 def insta_searching(word):
     url = 'https://www.instagram.com/explore/tags/' + word
@@ -111,3 +167,17 @@ def crawl_instagram(username, password, keyword, num_posts=10):
         print(f"크롤링 중 오류 발생: {e}")
         return []
 
+# Main execution
+if __name__ == "__main__":
+    username = input("인스타 아이디 입력:")
+    password = input("인스타 비밀번호 입력:")
+    keyword = input("검색 키워드 입력:")
+    num_posts = int(input("검색 게시물 개수 입력:"))
+
+    try:
+        results = crawl_instagram(username, password, keyword, num_posts)
+        print("-----------------------------------------------")
+        print(f"수집된 게시물 {len(results)}개")
+        print_results(results)
+    finally:
+        driver.quit()

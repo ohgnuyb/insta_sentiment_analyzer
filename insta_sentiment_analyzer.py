@@ -56,3 +56,12 @@ def select_first(driver):
     first = driver.find_element(By.CSS_SELECTOR, 'div._aagu')
     first.click()
     time.sleep(5)
+    
+def move_next(driver):
+    try:
+        WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.CSS_SELECTOR, 'div._aaqg._aaqh button._abl-')))
+        right = driver.find_element(By.CSS_SELECTOR, 'div._aaqg._aaqh button._abl-')
+        right.click()
+        WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.CSS_SELECTOR, 'div._a9zs')))
+    except Exception as e:
+        time.sleep(5)

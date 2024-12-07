@@ -65,3 +65,34 @@ def move_next(driver):
         WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.CSS_SELECTOR, 'div._a9zs')))
     except Exception as e:
         time.sleep(5)
+
+def crawl_instagram(username, password, keyword, num_posts=10):
+    try:
+        insta_login(driver, username, password)
+        go_to_home(driver)
+
+        url = insta_searching(keyword)
+        driver.get(url)
+        WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.CSS_SELECTOR, 'div._aagu')))
+        select_first(driver)
+
+        results = []
+        analyzed_count = 0
+
+        while analyzed_count < num_posts:
+            try:
+                data = get_content(driver)
+                results.append(data)
+                move_next(driver)
+                analyzed_count += 1
+            except Exception as e:
+                print(f"오류 발생: {e}")
+                time.sleep(5)
+                move_next(driver)
+
+        return results
+
+    except Exception as e:
+        print(f"크롤링 중 오류 발생: {e}")
+        return []
+

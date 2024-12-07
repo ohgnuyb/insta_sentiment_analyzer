@@ -32,6 +32,7 @@ Instagram 로그인: Selenium을 이용하여 사용자의 인스타그램 계�
 └── requirements.txt          # 라이브러리 설치 정리
 
 - 사용한 라이브러리 & 모듈 <br>
+
 selenium	4.27.1	웹 스크래핑 및 브라우저 자동화 (Edge 브라우저 제어, 웹 요소 찾기, 특정 상태 기다리기 등)
 
 transformers	4.46.3	자연어 처리 (DistilBERT 모델 사용, 텍스트 분류, 모델 학습 등)

@@ -56,7 +56,22 @@ def select_first(driver):
     first = driver.find_element(By.CSS_SELECTOR, 'div._aagu')
     first.click()
     time.sleep(5)
+
+def get_content(driver):
+    html = driver.page_source
+    soup = BeautifulSoup(html, 'html.parser')
+    try: 
+       content_with_hashtags = soup.select('div._a9zs')[0].text
+       content = re.sub(r'#\S+', '', content_with_hashtags)
+    except: 
+        content = ' '
     
+    tags = re.findall(r'#[^\s#,\\]+', content_with_hashtags)
+    if not tags:
+        tags = [f"#{keyword}"]
+    date = soup.select('time.x1p4m5qa')[0]['datetime'][:10]
+    return [content, date, tags]
+
 def move_next(driver):
     try:
         WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.CSS_SELECTOR, 'div._aaqg._aaqh button._abl-')))

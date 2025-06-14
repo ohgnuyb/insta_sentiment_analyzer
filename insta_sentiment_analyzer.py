@@ -4,6 +4,8 @@ from selenium.webdriver.edge.options import Options
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.edge.service import Service as EdgeService
+from webdriver_manager.microsoft import EdgeChromiumDriverManager
 import time
 import re
 from bs4 import BeautifulSoup
@@ -19,8 +21,9 @@ model = DistilBertForSequenceClassification.from_pretrained("distilbert-base-unc
 classifier = pipeline("sentiment-analysis", model=model, tokenizer=tokenizer)
 
 def analyze_sentiment(text):
-    # 텍스트에 대한 감정 분석
-    result = classifier(text)[0]
+    # 텍스트에 대한 감정 분석 (truncation=True 옵션 추가)
+    # 이 옵션이 텍스트가 모델의 최대 길이보다 길 경우 자동으로 잘라줍니다.
+    result = classifier(text, truncation=True)[0]
     
     sentiment = result['label']
     if sentiment == 'POSITIVE':
@@ -71,12 +74,12 @@ def print_results(results):
         print("수집된 게시물이 없습니다.")
 
 # Edge driver path setup
-edge_driver_path = "./msedgedriver.exe"
+# edge_driver_path = "./msedgedriver.exe"
 edge_options = Options()
-edge_options.add_experimental_option("detach", True)
-edge_options.add_experimental_option("excludeSwitches", ["enable-logging"])
+# edge_options.add_experimental_option("detach", True)
+# edge_options.add_experimental_option("excludeSwitches", ["enable-logging"])
 
-service = Service(executable_path=edge_driver_path)
+service = EdgeService(EdgeChromiumDriverManager().install())
 driver = webdriver.Edge(service=service, options=edge_options)
 
 def insta_login(driver, username, password):
@@ -116,18 +119,32 @@ def select_first(driver):
 def get_content(driver):
     html = driver.page_source
     soup = BeautifulSoup(html, 'html.parser')
-    try: 
-       content_with_hashtags = soup.select('div._a9zs')[0].text
-       content = re.sub(r'#\S+', '', content_with_hashtags)
-    except: 
-        content = ' '
     
-    tags = re.findall(r'#[^\s#,\\]+', content_with_hashtags)
-    if not tags:
-        tags = [f"#{keyword}"]
-    date = soup.select('time.x1p4m5qa')[0]['datetime'][:10]
-    return [content, date, tags]
+    try:
+        # 내용과 날짜를 가져오는 선택자(selector)를 새 클래스 이름으로 업데이트했습니다.
+        
+        # 🔻 [수정됨] 내용 부분 클래스 적용
+        #_ap3a _aaco _aacu _aacx _aad7 _aade -> ._ap3a._aaco._aacu._aacx._aad7._aade
+        content_with_hashtags = soup.select_one('._ap3a._aaco._aacu._aacx._aad7._aade').text
+        
+        # 🔻 [수정됨] 시간 부분 클래스 적용
+        #_a9ze _a9zf -> time._a9ze._a9zf
+        date = soup.select_one('time._a9ze._a9zf')['datetime'][:10]
 
+        # 해시태그를 제외한 순수 내용을 추출합니다.
+        content = re.sub(r'#\S+', '', content_with_hashtags).strip()
+        
+        # 해시태그만 따로 추출합니다.
+        tags = re.findall(r'#[^\s#,\\]+', content_with_hashtags)
+
+        # 모든 정보가 성공적으로 수집되면 리스트로 반환합니다.
+        return [content, date, tags]
+
+    except Exception as e:
+        # try 블록 안에서 뭐든 하나라도 실패하면...
+        print(f"❗ 게시물 내용 수집 실패 (건너뜁니다): {e}")
+        # 프로그램이 멈추지 않도록 빈 데이터를 반환합니다.
+        return ['', '날짜 없음', []]
 def move_next(driver):
     try:
         WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.CSS_SELECTOR, 'div._aaqg._aaqh button._abl-')))

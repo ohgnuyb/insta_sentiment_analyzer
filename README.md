@@ -8,8 +8,6 @@
 
 본 프로젝트는 Selenium과 DistilBERT 모델을 이용하여 Instagram에서 특정 키워드를 검색하고 게시물의 내용을 수집하여 여론 분석을 수행하는 Python 기반 크롤러입니다.
 
-
-
 - 주요 기능
 
 Instagram 로그인: Selenium을 이용하여 사용자의 인스타그램 계정에 로그인합니다.
@@ -22,14 +20,11 @@ Instagram 로그인: Selenium을 이용하여 사용자의 인스타그램 계�
 
 결과 출력: 분석 결과를 터미널에 출력하고, 긍정/부정/중립 게시물의 비율을 계산하여 보여줍니다.
 
-
 - 파일 개요
 
-└── msedgedriver.exe  # Edge 드라이버 파일
+└── insta_sentiment_analyzer.py           # 메인 Python 스크립트
 
-└── insta_sentiment_analyzer.py           # 메인 Python 스크립트
-
-└── requirements.txt          # 라이브러리 설치 정리
+└── requirements.txt          # 라이브러리 설치 정리
 
 - 사용한 라이브러리 & 모듈 <br>
 
@@ -49,13 +44,11 @@ beautifulsoup4	4.12.3	HTML 및 XML 파싱 (웹 스크래핑)
 
 필요한 라이브러리 설치: requirements.txt 파일을 이용하여 필요한 라이브러리를 설치합니다.
 
-Edge 드라이버 설치:  msedgedriver.exe 파일을 프로젝트 폴더에 위치시킵니다. (혹은 edge_driver_path 변수를 자신의 드라이버 경로에 맞게 수정합니다.)
+Edge 드라이버 설정: `webdriver_manager` 라이브러리를 사용하여 Edge 드라이버가 자동으로 관리됩니다. 별도로 `msedgedriver.exe` 파일을 다운로드하여 프로젝트 폴더에 위치시킬 필요가 없습니다.
 
 스크립트 실행: insta_sentiment_analyzer.py 파일을 실행합니다.
 
 정보 입력: 스크립트 실행 후, 인스타그램 아이디, 비밀번호, 검색 키워드, 검색 게시물 개수를 입력합니다.
-
-
 
 - 협업 정보 <br>
 
@@ -75,7 +68,6 @@ Edge 드라이버 설치:  msedgedriver.exe 파일을 프로젝트 폴더에 위
 202434854 최재진: 다음 게시물로 이동 기능 구현
 
 202434841 조자현: 여론 분석기능 구현
-
 
 - 추가 정보
 
